@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  roles:
+    - config_appfs
+  vars:
+    uninstall: false
+    FSs:
+      - {name: 'foo', path: '/bar'}
+      - {name: 'bar', path: '/foo/bar'}
+...

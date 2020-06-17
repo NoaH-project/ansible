@@ -1,0 +1,15 @@
+---
+- fail:
+    msg:
+      - The FSs variable is not defined in the Playbook!
+      - See a sample in tests folder.
+  when: FSs is not defined
+
+- import_tasks: install.yml
+  when: uninstall is not defined
+    or uninstall != true
+
+- import_tasks: uninstall.yml
+  when: uninstall is defined
+    and uninstall == true
+...

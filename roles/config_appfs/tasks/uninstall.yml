@@ -1,0 +1,56 @@
+---
+- name: Get BTRFS app block device
+  become: true
+  script: 'files/get_block_devices.sh'
+  register: _block_devices
+
+#- debug:
+#    var: _block_devices
+
+- name: Filter BTRFS app block devices list
+  set_fact:
+    __block_devices: '{{_block_devices.stdout_lines | difference([""])}}'
+
+#- debug:
+#    var: __block_devices
+
+- block:
+  - name: Mount BTRFS app temporary
+    become: true
+    mount:
+      src: 'UUID={{__block_devices[1]}}'
+      fstype: btrfs
+      path: /mnt/tmp
+      state: mounted
+    register: _mount
+
+  - name: Unmount file BTRFS filesystem
+    become: true
+    mount:
+      fstype: btrfs
+      path: '{{item.path}}/{{item.name}}'
+      state: absent
+    loop: '{{FSs}}'
+
+  - name: Unmount BTRFS app temporary
+    become: true
+    mount:
+      path: /mnt/tmp
+      state: absent
+
+  - name: Delete BTRFS
+    become: true
+    shell: wipefs --all {{__block_devices[0]}}
+
+  #- name: Uninstall prereqs
+  #  become: true
+  #  apt:
+  #    name:
+  #      - btrfs-progs
+  #    state: absent
+  #  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  #  tags:
+  #    - repository
+  #    - uninstall
+  #    - debian
+  when: __block_devices | length > 0

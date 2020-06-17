@@ -1,0 +1,78 @@
+---
+- name: Search for empty block devices
+  become: true
+  script: files/get_empty_block_devices.sh
+  register: _empty_block_devices
+
+#- debug:
+#    var: _empty_block_devices
+
+- name: Get empty block devices
+  set_fact:
+    __empty_block_devices:
+      '{{_empty_block_devices.stdout_lines | difference([""])}}'
+
+#- debug:
+#    var: '{{item}}'
+#  loop:
+#    - __empty_block_devices
+#    - FSs
+
+- block:
+  - name: Install prereqs
+    become: true
+    apt:
+      name:
+        - btrfs-progs
+      state: present
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+    tags:
+      - repository
+      - install
+      - debian
+
+  - name: Create BTRFS app Volume
+    become: true
+    shell: mkfs.btrfs -fL app {{__empty_block_devices[0]}}
+
+  - name: Get BTRFS app block devices
+    become: true
+    script: files/get_block_devices.sh
+    register: _block_devices
+
+  - name: Filter BTRFS block devices list
+    set_fact:
+      __block_devices: '{{_block_devices.stdout_lines | difference([""])}}'
+
+#  - debug:
+#      var: __block_devices
+
+  - name: Mount BTRFS app temporary
+    become: true
+    mount:
+      src: 'UUID={{__block_devices[1]}}'
+      fstype: btrfs
+      path: /mnt/tmp
+      state: mounted
+
+  - name: Create BTRFS app subvolumes
+    become: true
+    shell: 'btrfs subvolume create /mnt/tmp/{{item.name}}'
+    loop: '{{FSs}}'
+
+  - name: Mount BTRFS subvolumes
+    become: true
+    mount:
+      src: 'UUID={{__block_devices[1]}}'
+      fstype: btrfs
+      path: '{{item.path}}/{{item.name}}'
+      opts: 'defaults,noatime,autodefrag,compress=lzo,subvol=/{{item.name}}'
+      state: mounted
+    loop: '{{FSs}}'
+
+  - name: Unmount BTRFS app temporary
+    become: true
+    mount:
+      path: /mnt/tmp
+      state: absent
+  when: __empty_block_devices | length > 0
