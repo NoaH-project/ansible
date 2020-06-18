@@ -1,0 +1,24 @@
+namespace: "noah_project"
+name: "config_appfs"
+version: "0.1.4"
+license:
+  - "MIT"
+description: "Role para detecção e configuração de block device com Volume Manager e filesystem BTRFS."
+authors:
+  - "Clauzio Cristiano Perpétuo <clauzio.perpetuo@gmail.com>"
+  - "NoaH-project"
+tags:
+  - "btrfs"
+  - "filesystem"
+  - "linux"
+readme: "README.md"
+repository: https://github.com/NoaH-project/ansible-config_appfs.git
+
+# The URL to any online docs
+documentation: https://github.com/NoaH-project/ansible-config_appfs/wiki
+
+# The URL to the homepage of the collection/project
+homepage: https://galaxy.ansible.com/noah_project
+
+# The URL to the collection issue tracker
+issues: https://github.com/NoaH-project/ansible-config_appfs/issues
